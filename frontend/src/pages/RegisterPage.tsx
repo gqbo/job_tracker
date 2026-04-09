@@ -1,24 +1,27 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 import { useAuth } from '@/hooks/useAuth'
 import { AuthBrandingPanel } from '@/components/AuthBrandingPanel'
-import { loginSchema, type LoginFormValues } from '@/validation/schemas/auth.schema'
+import { signupSchema, type SignupFormValues } from '@/validation/schemas/auth.schema'
 
-export function LoginPage() {
-  const { signIn } = useAuth()
+export function RegisterPage() {
+  const { signUp } = useAuth()
   const navigate = useNavigate()
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
     mode: 'onTouched',
   })
 
   const onSubmit = form.handleSubmit(async (data) => {
+    setSuccessMsg(null)
     try {
-      await signIn(data.email, data.password)
-      navigate('/dashboard')
+      await signUp(data.email, data.password)
+      setSuccessMsg('Account created! Check your email to confirm before signing in.')
     } catch (err) {
       form.setError('root', {
         message: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
@@ -35,7 +38,7 @@ export function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Heading */}
           <h2 className="font-display font-semibold text-[#323235] text-2xl text-center mb-8">
-            Sign in to your account
+            Create your account
           </h2>
 
           {/* Form */}
@@ -67,21 +70,13 @@ export function LoginPage() {
 
             {/* Password */}
             <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label className="font-body text-xs font-medium text-[#5f5f61] uppercase tracking-wider">
-                  Password
-                </label>
-                <button
-                  type="button"
-                  className="font-body text-xs text-[#005ac2] hover:underline"
-                >
-                  Forgot password?
-                </button>
-              </div>
+              <label className="font-body text-xs font-medium text-[#5f5f61] uppercase tracking-wider">
+                Password
+              </label>
               <input
                 {...form.register('password')}
                 type="password"
-                autoComplete="current-password"
+                autoComplete="new-password"
                 placeholder="••••••••"
                 className="
                   w-full px-4 py-3 rounded-md font-body text-sm text-[#323235]
@@ -98,10 +93,15 @@ export function LoginPage() {
               )}
             </div>
 
-            {/* Root error (Supabase errors) */}
+            {/* Root error (Supabase errors) / Success message */}
             {form.formState.errors.root && (
               <p className="font-body text-xs text-[#ba1a1a] bg-[#ba1a1a]/5 px-3 py-2 rounded-md">
                 {form.formState.errors.root.message}
+              </p>
+            )}
+            {successMsg && (
+              <p className="font-body text-xs text-emerald-700 bg-emerald-50 px-3 py-2 rounded-md">
+                {successMsg}
               </p>
             )}
 
@@ -117,19 +117,19 @@ export function LoginPage() {
                 transition-all shadow-sm
               "
             >
-              {form.formState.isSubmitting ? 'Signing in…' : 'Sign In'}
+              {form.formState.isSubmitting ? 'Creating account…' : 'Create Account'}
             </button>
           </form>
 
           {/* Footer note */}
           <p className="mt-6 text-center font-body text-sm text-[#5f5f61]">
-            Don't have an account?{' '}
+            Already have an account?{' '}
             <button
               type="button"
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/login')}
               className="text-[#005ac2] hover:underline font-medium"
             >
-              Register
+              Sign in
             </button>
           </p>
         </div>
