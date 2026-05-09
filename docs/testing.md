@@ -1,34 +1,25 @@
 # Testing Strategy
 
 ## Philosophy
+
 - Test behavior, not implementation
 - Integration tests provide the most value per effort
-- Don't test library code (supabase-py, axios, React internals)
-- Every endpoint: happy path + auth failure + validation error at minimum
+- Don't test library code (Supabase JS, React internals)
+- Every function/component: happy path + auth failure + validation error at minimum
 
 ## Commands
 
 ```bash
-# Backend
-cd backend
-pytest                              # all tests
-pytest tests/test_api/ -v           # integration only
-pytest tests/test_services/ -v      # unit only
-pytest -k "test_name" -v            # single test
-
-# Frontend
-cd frontend
+# Frontend (from frontend/)
 npx vitest          # watch mode
 npx vitest --run    # CI mode
+
+# Vercel Function unit tests (from project root)
+npx vitest run api/
+
+# Extension lib unit tests (from extension/)
+npx vitest run
 ```
-
-## Backend
-
-**Integration tests** (`tests/test_api/`): full request cycle — HTTP → router → service → repository → response. Use `conftest.py` fixtures: `client`, `authenticated_client`, `test_user_id`.
-
-**Unit tests** (`tests/test_services/`): business logic in isolation with mocked repositories.
-
-**What NOT to test:** repository methods (thin supabase-py wrappers), Pydantic validation, FastAPI DI mechanics, Supabase SDK behavior.
 
 ## Frontend
 
@@ -36,11 +27,43 @@ npx vitest --run    # CI mode
 
 **Hook tests:** use `renderHook` from React Testing Library.
 
-**What NOT to test:** shadcn/ui components, TanStack Query caching, React Router navigation, CSS/styling.
+**What NOT to test:** shadcn/ui components, TanStack Query caching, React Router navigation, CSS/styling, Supabase SDK behavior.
 
-## E2E
-Not in scope for initial sprints. Playwright can be added later for critical flows.
+Mock at the `@/api/applications` module boundary — don't mock individual Supabase calls.
+
+## Vercel Function (`api/`)
+
+Unit tests live in `api/__tests__/`. They mock:
+- `ai` → `generateObject` (returns fixed Zod-valid object)
+- `../\_lib/supabase` → `createServerClient` (returns mock with `auth.getUser`)
+- `../\_lib/llm` → `extractionModel` (string stub)
+
+Coverage targets:
+- 405 for non-POST
+- 401 for missing/invalid token
+- 400 for missing/empty html, invalid url
+- 200 with correct schema shape
+- 502 on LLM throw
+- No `supabase.from()` call in any path (stateless assertion)
+
+## Browser Extension (`extension/`)
+
+**Unit tests** (`extension/src/lib/__tests__/`): pure functions only. `clean-html.test.ts` covers all four strip operations + truncation + LinkedIn-style combined scenario.
+
+**Manual E2E** (required before Slice 3 PR): load sideloaded extension in Chrome and verify end-to-end on:
+- LinkedIn job posting
+- Indeed job posting
+- Greenhouse-hosted board
+- Lever-hosted board
+
+Screenshot each result. All 4 must pass before the PR is merged.
+
+## E2E (Web App)
+
+Not currently automated. Can add Playwright for critical flows in a future sprint.
 
 ## File Naming
-- Backend: `test_<module>.py` in `tests/test_api/` or `tests/test_services/`
+
 - Frontend: `<Component>.test.tsx` or `<hook>.test.ts` — next to source or in `__tests__/`
+- Function: `__tests__/extract.test.ts`
+- Extension: `src/lib/__tests__/<file>.test.ts`
