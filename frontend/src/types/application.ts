@@ -32,6 +32,13 @@ export interface PaginatedApplications {
 
 export interface CreateApplicationPayload {
   url: string
+  company?: string | null
+  role?: string | null
+  status?: ApplicationStatus
+  modality?: ApplicationModality | null
+  location?: string | null
+  salary?: string | null
+  source?: string | null
 }
 
 export interface UpdateApplicationPayload {

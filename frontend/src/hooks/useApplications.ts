@@ -1,17 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  getApplications, createApplication, updateApplication,
-  deleteApplication, getNotes, createNote, deleteNote,
+  listApplications, createApplication, updateApplication,
+  deleteApplication, listNotes, createNote, deleteNote,
 } from '@/api/applications'
 import type { Application, ApplicationNote, UpdateApplicationPayload, CreateApplicationPayload, CreateNotePayload } from '@/types'
 
 export function useApplications() {
   return useQuery({
     queryKey: ['applications'],
-    queryFn: async () => {
-      const data = await getApplications({ limit: 1000 })
-      return data.items
-    },
+    queryFn: () => listApplications(),
   })
 }
 
@@ -64,7 +61,7 @@ export function useDeleteApplication() {
 export function useNotes(applicationId: string | null) {
   return useQuery({
     queryKey: ['applications', applicationId, 'notes'],
-    queryFn: () => getNotes(applicationId!),
+    queryFn: () => listNotes(applicationId!),
     enabled: !!applicationId,
     select: (data: ApplicationNote[]) =>
       [...data].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
@@ -82,7 +79,7 @@ export function useCreateNote(applicationId: string) {
 export function useDeleteNote(applicationId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (noteId: string) => deleteNote(applicationId, noteId),
+    mutationFn: (noteId: string) => deleteNote(noteId),
     onMutate: async (noteId) => {
       await queryClient.cancelQueries({ queryKey: ['applications', applicationId, 'notes'] })
       const snapshot = queryClient.getQueryData<ApplicationNote[]>(['applications', applicationId, 'notes'])
@@ -99,4 +96,3 @@ export function useDeleteNote(applicationId: string) {
     onSettled: () => queryClient.invalidateQueries({ queryKey: ['applications', applicationId, 'notes'] }),
   })
 }
- 
