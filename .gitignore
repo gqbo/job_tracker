@@ -46,4 +46,5 @@ supabase/.branches/
 supabase/.temp/
 
 # Claude
-.claude/skills
+.claude/
+.atl/
