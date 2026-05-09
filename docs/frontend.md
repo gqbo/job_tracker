@@ -18,7 +18,7 @@ Query keys are hierarchical for smart invalidation:
 - `['applications', id]` — single
 - `['stats']` — dashboard stats
 
-All data fetching in custom hooks (`hooks/`), never in components directly. Components call hooks → hooks call API functions → API functions call axios.
+All data fetching in custom hooks (`hooks/`), never in components directly. Components call hooks → hooks call API functions → API functions call the Supabase JS client directly.
 
 ## Component Organization
 
@@ -33,8 +33,7 @@ src/
   pages/                   # One component per route
   hooks/                   # All data fetching and auth hooks
   lib/
-    axios.ts               # Configured instance with auth interceptor
-    supabase.ts            # Supabase client (auth only)
+    supabase.ts            # Supabase client — used for auth and all data access
   types/                   # All TypeScript interfaces — never use `any`
   validation/
     schemas/auth.schema.ts # Zod schemas + inferred types
@@ -42,21 +41,23 @@ src/
 
 Rules:
 - Pages use hooks. Components receive data via props.
-- Never import axios directly — always use `lib/axios.ts`
 - Never use `any` — define interfaces in `types/`
 - shadcn/ui components in `components/ui/` are NOT modified after generation
 
-## Axios
+## Supabase Client
 
-`lib/axios.ts` has a request interceptor that reads the Supabase session from localStorage and attaches `Authorization: Bearer <token>` on every request. Never instantiate axios elsewhere.
+`lib/supabase.ts` exports a single `supabase` client initialized with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. This client is used for both auth (session, sign-in, sign-out) and all data access (applications, notes). RLS on the Supabase side scopes every query to the authenticated user — no explicit `user_id` filter is needed in frontend code.
+
+`src/api/applications.ts` exposes named functions (`listApplications`, `createApplication`, `getApplication`, `updateApplication`, `deleteApplication`, `listNotes`, `createNote`, `deleteNote`) that call `supabase.from(...)` directly. All throw on Supabase errors. `listApplications` fetches up to 1000 rows ordered by `created_at DESC` — if this limit changes, update this doc.
+
+`VITE_API_URL` is no longer used or required.
 
 ## Auth Flow (Frontend)
 
-1. Form submit → Supabase JS SDK handles auth directly (no FastAPI involved)
+1. Form submit → Supabase JS SDK handles auth directly
 2. Supabase stores JWT in localStorage automatically
 3. `AuthContext` listens to `onAuthStateChange`, exposes `user`, `signIn`, `signOut`, `loading`
-4. axios interceptor reads token from Supabase session and attaches it to API calls
-5. `ProtectedLayout` checks `user` from context — frontend-only, no backend call
+4. `ProtectedLayout` checks `user` from context — frontend-only, no backend call
 
 ## Routing
 

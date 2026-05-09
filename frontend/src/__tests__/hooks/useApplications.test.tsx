@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import type { Application, PaginatedApplications } from '@/types'
+import type { Application } from '@/types'
 import * as applicationsApi from '@/api/applications'
 
 vi.mock('@/api/applications', () => ({
-  getApplications: vi.fn(),
+  listApplications: vi.fn(),
   createApplication: vi.fn(),
   updateApplication: vi.fn(),
   deleteApplication: vi.fn(),
-  getNotes: vi.fn(),
+  listNotes: vi.fn(),
   createNote: vi.fn(),
   deleteNote: vi.fn(),
 }))
@@ -38,10 +38,9 @@ const mockApp: Application = {
 describe('useApplications', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('returns items array from PaginatedApplications response', async () => {
+  it('returns flat Application array from Supabase response', async () => {
     const { useApplications } = await import('@/hooks/useApplications')
-    const response: PaginatedApplications = { items: [mockApp], total: 1, limit: 1000, offset: 0 }
-    vi.mocked(applicationsApi.getApplications).mockResolvedValue(response)
+    vi.mocked(applicationsApi.listApplications).mockResolvedValue([mockApp])
     const { wrapper } = createWrapper()
     const { result } = renderHook(() => useApplications(), { wrapper })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -50,8 +49,7 @@ describe('useApplications', () => {
 
   it('returns empty array when no applications exist', async () => {
     const { useApplications } = await import('@/hooks/useApplications')
-    const response: PaginatedApplications = { items: [], total: 0, limit: 1000, offset: 0 }
-    vi.mocked(applicationsApi.getApplications).mockResolvedValue(response)
+    vi.mocked(applicationsApi.listApplications).mockResolvedValue([])
     const { wrapper } = createWrapper()
     const { result } = renderHook(() => useApplications(), { wrapper })
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
@@ -64,8 +62,7 @@ describe('useCreateApplication', () => {
 
   it('calls API with correct payload and invalidates applications on success', async () => {
     const { useApplications, useCreateApplication } = await import('@/hooks/useApplications')
-    const response: PaginatedApplications = { items: [], total: 0, limit: 1000, offset: 0 }
-    vi.mocked(applicationsApi.getApplications).mockResolvedValue(response)
+    vi.mocked(applicationsApi.listApplications).mockResolvedValue([])
     vi.mocked(applicationsApi.createApplication).mockResolvedValue(mockApp)
     const { wrapper, queryClient } = createWrapper()
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
@@ -85,8 +82,7 @@ describe('useUpdateApplication', () => {
 
   it('applies optimistic update to cache before API resolves', async () => {
     const { useApplications, useUpdateApplication } = await import('@/hooks/useApplications')
-    const response: PaginatedApplications = { items: [mockApp], total: 1, limit: 1000, offset: 0 }
-    vi.mocked(applicationsApi.getApplications).mockResolvedValue(response)
+    vi.mocked(applicationsApi.listApplications).mockResolvedValue([mockApp])
     // Never resolves — we check cache state immediately
     vi.mocked(applicationsApi.updateApplication).mockReturnValue(new Promise(() => {}))
     const { wrapper, queryClient } = createWrapper()
@@ -104,8 +100,7 @@ describe('useUpdateApplication', () => {
 
   it('rolls back cache on API error', async () => {
     const { useApplications, useUpdateApplication } = await import('@/hooks/useApplications')
-    const response: PaginatedApplications = { items: [mockApp], total: 1, limit: 1000, offset: 0 }
-    vi.mocked(applicationsApi.getApplications).mockResolvedValue(response)
+    vi.mocked(applicationsApi.listApplications).mockResolvedValue([mockApp])
     vi.mocked(applicationsApi.updateApplication).mockRejectedValue(new Error('Server error'))
     const { wrapper, queryClient } = createWrapper()
     renderHook(() => useApplications(), { wrapper })
@@ -125,8 +120,7 @@ describe('useDeleteApplication', () => {
 
   it('optimistically removes item from cache', async () => {
     const { useApplications, useDeleteApplication } = await import('@/hooks/useApplications')
-    const response: PaginatedApplications = { items: [mockApp], total: 1, limit: 1000, offset: 0 }
-    vi.mocked(applicationsApi.getApplications).mockResolvedValue(response)
+    vi.mocked(applicationsApi.listApplications).mockResolvedValue([mockApp])
     vi.mocked(applicationsApi.deleteApplication).mockReturnValue(new Promise(() => {}))
     const { wrapper, queryClient } = createWrapper()
     renderHook(() => useApplications(), { wrapper })
@@ -141,8 +135,7 @@ describe('useDeleteApplication', () => {
 
   it('rolls back on error', async () => {
     const { useApplications, useDeleteApplication } = await import('@/hooks/useApplications')
-    const response: PaginatedApplications = { items: [mockApp], total: 1, limit: 1000, offset: 0 }
-    vi.mocked(applicationsApi.getApplications).mockResolvedValue(response)
+    vi.mocked(applicationsApi.listApplications).mockResolvedValue([mockApp])
     vi.mocked(applicationsApi.deleteApplication).mockRejectedValue(new Error('fail'))
     const { wrapper, queryClient } = createWrapper()
     renderHook(() => useApplications(), { wrapper })

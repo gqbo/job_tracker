@@ -2,6 +2,13 @@ import { z } from 'zod'
 
 export const addApplicationSchema = z.object({
   url: z.string().url('Please enter a valid URL'),
+  company: z.string().optional(),
+  role: z.string().optional(),
+  modality: z.enum(['remote', 'hybrid', 'on_site', '']).optional(),
+  location: z.string().optional(),
+  salary: z.string().optional(),
+  source: z.string().optional(),
+  status: z.enum(['bookmarked', 'applied', 'interviewing', 'accepted', 'rejected', 'ghosted']).optional(),
 })
 
 export const noteSchema = z.object({

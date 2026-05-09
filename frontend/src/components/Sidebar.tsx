@@ -1,6 +1,7 @@
 import { useLocation, NavLink } from 'react-router-dom'
 import { Briefcase, Kanban, BarChart2, Settings } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { ConnectExtensionButton } from './ConnectExtensionButton'
 
 const NAV_ITEMS = [
   {
@@ -80,11 +81,14 @@ export function Sidebar() {
       </nav>
 
       {/* User section */}
-      <div className="px-4 py-5 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-[#005ac2]/15 flex items-center justify-center flex-shrink-0">
-          <span className="text-xs font-semibold text-[#005ac2]">{initials}</span>
+      <div className="px-4 py-4 flex flex-col gap-3 border-t border-[#e5e0e5]">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#005ac2]/15 flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-semibold text-[#005ac2]">{initials}</span>
+          </div>
+          <span className="text-xs text-[#5f5f61] truncate">{user?.email ?? ''}</span>
         </div>
-        <span className="text-xs text-[#5f5f61] truncate">{user?.email ?? ''}</span>
+        <ConnectExtensionButton />
       </div>
     </aside>
   )
