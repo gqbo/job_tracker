@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "JobTrackr",
+  "version": "1.0.0",
+  "description": "Save job postings to JobTrackr with one click using AI extraction.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "JobTrackr"
+  },
+  "background": {
+    "service_worker": "src/background.ts",
+    "type": "module"
+  }
+}
