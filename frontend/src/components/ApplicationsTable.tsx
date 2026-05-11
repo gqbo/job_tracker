@@ -150,7 +150,7 @@ interface ApplicationsTableProps {
   onDelete: (app: Application) => void
 }
 
-export function ApplicationsTable({ table, onUpdate, onOpenNotes, onDelete }: ApplicationsTableProps) {
+export function ApplicationsTable({ table }: ApplicationsTableProps) {
   return (
     <div className="bg-white rounded-lg overflow-hidden">
       <table className="w-full border-collapse">
