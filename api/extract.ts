@@ -5,7 +5,7 @@ import { ExtractedJobSchema, RequestBodySchema } from './_lib/schema'
 import { createServerClient } from './_lib/supabase'
 
 export const config = {
-  runtime: 'nodejs20.x',
+  runtime: 'nodejs',
   maxDuration: 10,
 }
 
