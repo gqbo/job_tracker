@@ -5,7 +5,6 @@
   "installCommand": "npm install",
   "functions": {
     "api/extract.ts": {
-      "runtime": "nodejs20",
       "maxDuration": 10
     }
   },
